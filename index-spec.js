@@ -47,6 +47,14 @@ describe('Topics', function() {
       });
       mediator.publish(this.topics.getTopic('create'), {id: 'trever'});
     });
+    it('should provide itself as context', function(done) {
+      var topics = this.topics;
+      this.topics.on('create', function() {
+        assert.equal(this, topics);
+        done();
+      });
+      mediator.publish(this.topics.getTopic('create'), {id: 'trever'});
+    });
   });
 
   describe('#onDone', function() {
@@ -55,26 +63,45 @@ describe('Topics', function() {
         assert.equal(user.id, 'trever');
         done();
       });
-      mediator.publish('done:' + this.topics.getTopic('create'), {id: 'trever'});
+      mediator.publish(this.topics.getTopic('create', 'done'), {id: 'trever'});
     });
-    xit('should provide the topics as a context to the subscriber', function(done) {
-      this.topics.on('create', function(user) {
-        assert.equal(user.id, 'trever');
-        this.publish('delete', user.id);
+    it('should provide itself as context', function(done) {
+      var topics = this.topics;
+      this.topics.onDone('create', function() {
+        assert.equal(this, topics);
+        done();
       });
-      this.topics.on('delete', function() {
-        
-      })
-      mediator.publish(this.topics.getTopic('create'), {id: 'trever'});
+      mediator.publish(this.topics.getTopic('create', 'done'), {id: 'trever'});
     });
   });
 
   describe('#onError', function() {
-    xit('should subscribe to a namespaced error: topic');
-    xit('should provide the topics as a context to the subscriber');
+    it('should subscribe to a namespaced error: topic', function(done) {
+      this.topics.onError('create', function(e) {
+        assert.equal(e.message, 'kaboom');
+        done();
+      });
+      mediator.publish(this.topics.getTopic('create', 'error'), new Error('kaboom'));
+    });
+    it('should provide itself as context', function(done) {
+      var topics = this.topics;
+      this.topics.onError('create', function() {
+        assert.equal(this, topics);
+        done();
+      });
+      mediator.publish(this.topics.getTopic('create', 'error'), new Error('kaboom'));
+    });
   });
 
   describe('#request', function() {
-    xit('should request a namespaced topic');
+    it('should request a namespaced topic', function(done) {
+      this.topics.on('find', function() {
+        return {id: 'trever'};
+      });
+      this.topics.request('find', 'trever').then(function(user) {
+        assert.equal(user.id, 'trever');
+        done();
+      });
+    });
   });
 });

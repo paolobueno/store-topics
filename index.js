@@ -18,7 +18,7 @@ Topics.prototype.addSubscription = function(topic, fn) {
 };
 
 Topics.prototype.getTopic = function(topicName, prefix) {
-  // create => wfm:user:create
+  // create, done => done:wfm:user:create
   var parts = [this.prefix, this.entity, topicName];
   if (prefix) {
     parts.unshift(prefix);
@@ -26,10 +26,8 @@ Topics.prototype.getTopic = function(topicName, prefix) {
   return parts.join(':');
 };
 
-Topics.prototype.on = function(method, fn) {
-  var topic = this.getTopic(method);
-  var self = this;
-  var wrappedFn = function() {
+function wrapInMediatorPromise(self, method, fn) {
+  return function() {
     Promise.resolve(fn.apply(self, arguments)).then(function(result) {
       self.mediator.publish(self.getTopic(method, 'done'), result);
       return result;
@@ -37,18 +35,23 @@ Topics.prototype.on = function(method, fn) {
       self.mediator.publish(self.getTopic(method, 'error'), error);
     });
   };
-  this.addSubscription(topic, wrappedFn);
+}
+
+Topics.prototype.on = function(method, fn) {
+  var topic = this.getTopic(method);
+  this.addSubscription(topic, wrapInMediatorPromise(this, method, fn));
+  return this;
 };
 
 Topics.prototype.onDone = function(method, fn) {
   var topic = this.getTopic(method, 'done');
-  this.addSubscription(topic, fn);
+  this.addSubscription(topic, wrapInMediatorPromise(this, topic, fn));
   return this;
 };
 
 Topics.prototype.onError = function(method, fn) {
   var topic = this.getTopic(method, 'error');
-  this.addSubscription(topic, fn);
+  this.addSubscription(topic, wrapInMediatorPromise(this, topic, fn));
   return this;
 };
 
@@ -63,6 +66,7 @@ Topics.prototype.unsubscribeAll = function() {
 };
 
 Topics.prototype.request = function(topic, params, options) {
+  return this.mediator.request(this.getTopic(topic), params, options);
 };
 
 module.exports = Topics;
