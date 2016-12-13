@@ -6,6 +6,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "fh-wfm-mediator": "0.0.15",
     "mocha": "^3.2.0"
   }
 }
