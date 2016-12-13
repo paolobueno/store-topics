@@ -29,7 +29,13 @@ Topics.prototype.getTopic = function(topicName, prefix) {
 function wrapInMediatorPromise(self, method, fn) {
   return function() {
     Promise.resolve(fn.apply(self, arguments)).then(function(result) {
-      self.mediator.publish(self.getTopic(method, 'done'), result);
+      var topic = self.getTopic(method, 'done');
+      if (typeof result === 'object' && result.id) {
+        topic = [topic, result.id].join(':');
+      } else if (typeof result === 'string') {
+        topic = [topic, result].join(':');
+      }
+      self.mediator.publish(topic, result);
       return result;
     }).catch(function(error) {
       self.mediator.publish(self.getTopic(method, 'error'), error);

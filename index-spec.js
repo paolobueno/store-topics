@@ -26,13 +26,35 @@ describe('Topics', function() {
       mediator.publish(this.topics.getTopic('create'), {id: 'trever'});
     });
 
-    it('should publish a done: event for a unsuccessful promise', function(done) {
+    it('should publish a done: event for a successful promise', function(done) {
       this.topics.on('create', function(user) {
         assert.equal(user.id, 'trever');
         return Promise.resolve(user);
       });
-      this.topics.onDone('create', function(user) {
+      this.topics.onDone('create:trever', function(user) {
         assert.equal(user.id, 'trever');
+        done();
+      });
+      mediator.publish(this.topics.getTopic('create'), {id: 'trever'});
+    });
+    it('should use result.id as a uid for request calls', function(done) {
+      this.topics.on('create', function(user) {
+        assert.equal(user.id, 'trever');
+        return Promise.resolve(user);
+      });
+      this.topics.onDone('create:trever', function(user) {
+        assert.equal(user.id, 'trever');
+        done();
+      });
+      mediator.publish(this.topics.getTopic('create'), {id: 'trever'});
+    });
+    it('should use result as a uid for request calls if result is a string', function(done) {
+      this.topics.on('create', function(user) {
+        assert.equal(user.id, 'trever');
+        return Promise.resolve('trever');
+      });
+      this.topics.onDone('create:trever', function(name) {
+        assert.equal(name, 'trever');
         done();
       });
       mediator.publish(this.topics.getTopic('create'), {id: 'trever'});
