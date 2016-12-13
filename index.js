@@ -38,7 +38,11 @@ function wrapInMediatorPromise(self, method, fn) {
       self.mediator.publish(topic, result);
       return result;
     }).catch(function(error) {
-      self.mediator.publish(self.getTopic(method, 'error'), error);
+      var topic = self.getTopic(method, 'error');
+      if (error && error.id) {
+        topic = [topic, error.id].join(':');
+      }
+      self.mediator.publish(topic, error);
     });
   };
 }

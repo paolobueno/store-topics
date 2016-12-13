@@ -59,11 +59,23 @@ describe('Topics', function() {
       });
       mediator.publish(this.topics.getTopic('create'), {id: 'trever'});
     });
-    it('should publish an error: event for a successful promise', function(done) {
+    it('should publish an error: event for a unsuccessful promise', function(done) {
       this.topics.on('create', function() {
         return Promise.reject(new Error('kaboom'));
       });
       this.topics.onError('create', function(e) {
+        assert.equal(e.message, 'kaboom');
+        done();
+      });
+      mediator.publish(this.topics.getTopic('create'), {id: 'trever'});
+    });
+    it('should use result.id as a uid for request error calls', function(done) {
+      this.topics.on('create', function() {
+        var e = new Error('kaboom');
+        e.id = 'trever'
+        return Promise.reject(e);
+      });
+      this.topics.onError('create:trever', function(e) {
         assert.equal(e.message, 'kaboom');
         done();
       });
